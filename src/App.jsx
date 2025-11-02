@@ -249,11 +249,11 @@ const HomePage = () => {
     genreOverlay: {
       position: 'absolute',
       inset: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.3) 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      transition: 'background-color 0.3s'
+      transition: 'background 0.3s'
     },
     genreName: {
       fontSize: '1.25rem',
@@ -560,28 +560,67 @@ const HomePage = () => {
     );
   };
 
-  const GenreCard = ({ genre }) => (
-    <div 
-      style={styles.genreCard}
-      onClick={() => handleGenreClick(genre.id)}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'scale(1.05)';
-        e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={`Browse ${genre.name} movies`}
-    >
-      <div style={styles.genreBackground} />
-      <div style={styles.genreOverlay}>
-        <h3 style={styles.genreName}>{genre.name}</h3>
+  // Genre images mapping
+  const genreImages = {
+    28: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&q=80', // Action
+    12: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80', // Adventure
+    16: 'https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=800&q=80', // Animation
+    35: 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=800&q=80', // Comedy
+    80: 'https://images.unsplash.com/photo-1628348068343-c6a848d2b6dd?w=800&q=80', // Crime
+    99: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=800&q=80', // Documentary
+    18: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?w=800&q=80', // Drama
+    10751: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&q=80', // Family
+    14: 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=800&q=80', // Fantasy
+    36: 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?w=800&q=80', // History
+    27: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=800&q=80', // Horror
+    10402: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80', // Music
+    9648: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80', // Mystery
+    10749: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80', // Romance
+    878: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80', // Science Fiction
+    10770: 'https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?w=800&q=80', // TV Movie
+    53: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=800&q=80', // Thriller
+    10752: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&q=80', // War
+    37: 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=800&q=80', // Western
+  };
+
+  const GenreCard = ({ genre }) => {
+    const genreImage = genreImages[genre.id] || 'https://images.unsplash.com/photo-1574267432644-f74723892c49?w=800&q=80';
+    
+    return (
+      <div 
+        style={styles.genreCard}
+        onClick={() => handleGenreClick(genre.id)}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'scale(1.05)';
+          e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.3)';
+          e.currentTarget.querySelector('img').style.transform = 'scale(1.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = 'none';
+          e.currentTarget.querySelector('img').style.transform = 'scale(1)';
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Browse ${genre.name} movies`}
+      >
+        <img 
+          src={genreImage}
+          alt={genre.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: 'transform 0.3s ease'
+          }}
+          loading="lazy"
+        />
+        <div style={styles.genreOverlay}>
+          <h3 style={styles.genreName}>{genre.name}</h3>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div style={styles.app}>
