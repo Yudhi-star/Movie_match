@@ -1,0 +1,437 @@
+import React, { useState, useEffect } from 'react';
+import { Search, Film, Heart } from 'lucide-react';
+
+const MovieMatch = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [genres, setGenres] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  
+  // Add your TMDB API key here
+  const TMDB_API_KEY = 'ff30f72708df174d914c34b4d270a224';
+  const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
+
+  const styles = {
+    app: {
+      minHeight: '100vh',
+      backgroundColor: '#000',
+      color: '#fff',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      borderBottom: '1px solid #2d2d2d',
+      padding: '1rem 1.5rem'
+    },
+    headerContent: {
+      maxWidth: '1280px',
+      margin: '0 auto',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      fontSize: '1.5rem',
+      fontWeight: 'bold'
+    },
+    nav: {
+      display: 'flex',
+      gap: '2rem'
+    },
+    navLink: {
+      color: '#fff',
+      textDecoration: 'none',
+      transition: 'color 0.3s',
+      cursor: 'pointer'
+    },
+    hero: {
+      padding: '5rem 1.5rem',
+      textAlign: 'center'
+    },
+    heroContent: {
+      maxWidth: '56rem',
+      margin: '0 auto'
+    },
+    title: {
+      fontSize: '3.5rem',
+      fontWeight: 'bold',
+      marginBottom: '1.5rem'
+    },
+    subtitle: {
+      fontSize: '1.25rem',
+      color: '#9ca3af',
+      marginBottom: '2rem'
+    },
+    searchContainer: {
+      display: 'flex',
+      gap: '1rem',
+      maxWidth: '42rem',
+      margin: '0 auto'
+    },
+    searchWrapper: {
+      flex: 1,
+      position: 'relative'
+    },
+    searchIcon: {
+      position: 'absolute',
+      left: '1rem',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      color: '#6b7280'
+    },
+    input: {
+      width: '100%',
+      padding: '1rem 1rem 1rem 3rem',
+      backgroundColor: '#1f1f1f',
+      border: '1px solid #2d2d2d',
+      borderRadius: '0.5rem',
+      color: '#fff',
+      fontSize: '1rem',
+      outline: 'none'
+    },
+    button: {
+      padding: '1rem 2rem',
+      backgroundColor: '#2563eb',
+      border: 'none',
+      borderRadius: '0.5rem',
+      color: '#fff',
+      fontWeight: '600',
+      cursor: 'pointer',
+      fontSize: '1rem',
+      transition: 'background-color 0.3s'
+    },
+    section: {
+      padding: '3rem 1.5rem'
+    },
+    sectionContent: {
+      maxWidth: '1280px',
+      margin: '0 auto'
+    },
+    sectionTitle: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      marginBottom: '2rem'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+      gap: '1rem'
+    },
+    movieCard: {
+      position: 'relative',
+      cursor: 'pointer',
+      borderRadius: '0.5rem',
+      overflow: 'hidden'
+    },
+    movieImage: {
+      width: '100%',
+      height: '20rem',
+      objectFit: 'cover',
+      transition: 'transform 0.3s'
+    },
+    heartIcon: {
+      position: 'absolute',
+      top: '0.5rem',
+      right: '0.5rem',
+      backgroundColor: 'rgba(31, 41, 55, 0.9)',
+      padding: '0.5rem',
+      borderRadius: '0.25rem',
+      cursor: 'pointer'
+    },
+    movieInfo: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: 'linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0.8), transparent)',
+      padding: '1rem'
+    },
+    movieTitle: {
+      fontWeight: '600',
+      fontSize: '0.875rem',
+      marginBottom: '0.25rem',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    },
+    movieDetails: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      fontSize: '0.75rem',
+      color: '#d1d5db'
+    },
+    genreCard: {
+      position: 'relative',
+      height: '12rem',
+      borderRadius: '0.5rem',
+      overflow: 'hidden',
+      cursor: 'pointer',
+      transition: 'transform 0.3s'
+    },
+    genreBackground: {
+      width: '100%',
+      height: '100%',
+      background: 'linear-gradient(135deg, #1e3a8a, #7c3aed)'
+    },
+    genreOverlay: {
+      position: 'absolute',
+      inset: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background-color 0.3s'
+    },
+    genreName: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      letterSpacing: '0.05em'
+    },
+    footer: {
+      borderTop: '1px solid #2d2d2d',
+      marginTop: '5rem',
+      padding: '2rem 1.5rem',
+      textAlign: 'center',
+      color: '#9ca3af'
+    },
+    clearButton: {
+      color: '#9ca3af',
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '0.5rem 1rem',
+      fontSize: '1rem'
+    }
+  };
+
+  // Fetch popular movies from TMDB
+  const fetchPopularMovies = async () => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`
+      );
+      const data = await response.json();
+      setPopularMovies(data.results.slice(0, 12));
+    } catch (error) {
+      console.error('Error fetching popular movies:', error);
+    }
+  };
+
+  // Fetch genres from TMDB
+  const fetchGenres = async () => {
+    try {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`
+      );
+      const data = await response.json();
+      setGenres(data.genres.slice(0, 12));
+    } catch (error) {
+      console.error('Error fetching genres:', error);
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    if (TMDB_API_KEY && TMDB_API_KEY !== 'YOUR_TMDB_API_KEY_HERE') {
+      fetchPopularMovies();
+      fetchGenres();
+    }
+  }, []);
+
+  // Search movies
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() && TMDB_API_KEY) {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${searchQuery}&page=1`
+        );
+        const data = await response.json();
+        setSearchResults(data.results.slice(0, 12));
+      } catch (error) {
+        console.error('Error searching movies:', error);
+      }
+      setIsSearching(false);
+    }
+  };
+
+  // Fetch movies by genre
+  const handleGenreClick = async (genreId) => {
+    if (TMDB_API_KEY) {
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&with_genres=${genreId}&page=1`
+        );
+        const data = await response.json();
+        setSearchResults(data.results.slice(0, 12));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        console.error('Error fetching movies by genre:', error);
+      }
+      setIsSearching(false);
+    }
+  };
+
+  const MovieCard = ({ movie }) => (
+    <div style={styles.movieCard}>
+      <img 
+        src={movie.poster_path ? `${TMDB_IMAGE_BASE}${movie.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Image'}
+        alt={movie.title} 
+        style={styles.movieImage}
+      />
+      <div style={styles.heartIcon}>
+        <Heart size={20} color="#d1d5db" />
+      </div>
+      <div style={styles.movieInfo}>
+        <h3 style={styles.movieTitle}>{movie.title}</h3>
+        <div style={styles.movieDetails}>
+          <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
+          {movie.vote_average > 0 && (
+            <span style={{color: '#fbbf24'}}>★ {movie.vote_average.toFixed(1)}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const GenreCard = ({ genre }) => (
+    <div 
+      style={styles.genreCard}
+      onClick={() => handleGenreClick(genre.id)}
+    >
+      <div style={styles.genreBackground} />
+      <div style={styles.genreOverlay}>
+        <h3 style={styles.genreName}>{genre.name}</h3>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={styles.app}>
+      {/* Header */}
+      <header style={styles.header}>
+        <div style={styles.headerContent}>
+          <div style={styles.logo}>
+            <Film size={32} color="#3b82f6" />
+            <h1>MovieMatch</h1>
+          </div>
+          <nav style={styles.nav}>
+            <a href="#" style={styles.navLink}>Home</a>
+            <a href="#" style={styles.navLink}>Genres</a>
+            <a href="#" style={styles.navLink}>About</a>
+            <a href="#" style={styles.navLink}>Contact</a>
+          </nav>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section style={styles.hero}>
+        <div style={styles.heroContent}>
+          <h2 style={styles.title}>Find Movies You'll Love</h2>
+          <p style={styles.subtitle}>Search by movie name or genre, or one theme.</p>
+          
+          <div style={styles.searchContainer}>
+            <div style={styles.searchWrapper}>
+              <div style={styles.searchIcon}>
+                <Search size={20} />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by movie name..."
+                style={styles.input}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(e);
+                  }
+                }}
+              />
+            </div>
+            <button
+              onClick={handleSearch}
+              disabled={isSearching}
+              style={{...styles.button, opacity: isSearching ? 0.5 : 1}}
+            >
+              {isSearching ? 'Searching...' : 'Find Movies'}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Search Results */}
+      {searchResults.length > 0 && (
+        <section style={styles.section}>
+          <div style={styles.sectionContent}>
+            <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '2rem'}}>
+              <h2 style={styles.sectionTitle}>Search Results</h2>
+              <button
+                onClick={() => setSearchResults([])}
+                style={styles.clearButton}
+              >
+                Clear Results
+              </button>
+            </div>
+            <div style={styles.grid}>
+              {searchResults.map(movie => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Popular Movies */}
+      <section style={styles.section}>
+        <div style={styles.sectionContent}>
+          <h2 style={styles.sectionTitle}>Popular Movies</h2>
+          {popularMovies.length > 0 ? (
+            <div style={styles.grid}>
+              {popularMovies.map(movie => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          ) : (
+            <div style={{textAlign: 'center', color: '#9ca3af', padding: '3rem 0'}}>
+              Loading movies...
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Movies by Genre */}
+      <section style={styles.section}>
+        <div style={styles.sectionContent}>
+          <h2 style={styles.sectionTitle}>Movies by Genre or Theme</h2>
+          {genres.length > 0 ? (
+            <div style={styles.grid}>
+              {genres.map(genre => (
+                <GenreCard key={genre.id} genre={genre} />
+              ))}
+            </div>
+          ) : (
+            <div style={{textAlign: 'center', color: '#9ca3af', padding: '3rem 0'}}>
+              Loading genres...
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={styles.footer}>
+        <p style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'}}>
+          © 2025 MovieMatch — Made with <Heart size={16} color="#ef4444" fill="#ef4444" /> for movie lovers
+        </p>
+      </footer>
+    </div>
+  );
+};
+
+export default MovieMatch;
