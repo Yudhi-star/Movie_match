@@ -351,33 +351,64 @@ const MovieDetails = () => {
         const movieData = await movieResponse.json();
         setMovie(movieData);
 
-        // Fetch keywords
-        const keywordsResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/keywords?api_key=${TMDB_API_KEY}`
-        );
-        const keywordsData = await keywordsResponse.json();
-        setKeywords(keywordsData.keywords || []);
+        // Fetch keywords - handle empty response
+        try {
+          const keywordsResponse = await fetch(
+            `https://api.themoviedb.org/3/movie/${id}/keywords?api_key=${TMDB_API_KEY}`
+          );
+          const keywordsData = await keywordsResponse.json();
+          setKeywords(keywordsData.keywords || []);
+        } catch (err) {
+          console.warn('Keywords not available:', err);
+          setKeywords([]);
+        }
 
-        // Fetch videos (trailers)
-        const videosResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${TMDB_API_KEY}&language=en-US`
-        );
-        const videosData = await videosResponse.json();
-        setVideos(videosData.results || []);
+        // Fetch videos (trailers) - handle empty response
+        try {
+          const videosResponse = await fetch(
+            `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${TMDB_API_KEY}&language=en-US`
+          );
+          const videosData = await videosResponse.json();
+          setVideos(videosData.results || []);
+        } catch (err) {
+          console.warn('Videos not available:', err);
+          setVideos([]);
+        }
 
-        // Fetch cast
-        const creditsResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/credits?api_key=${TMDB_API_KEY}`
-        );
-        const creditsData = await creditsResponse.json();
-        setCast(creditsData.cast?.slice(0, 12) || []);
+        // Fetch cast - handle empty response
+        try {
+          const creditsResponse = await fetch(
+            `https://api.themoviedb.org/3/movie/${id}/credits?api_key=${TMDB_API_KEY}`
+          );
+          const creditsData = await creditsResponse.json();
+          setCast(creditsData.cast?.slice(0, 12) || []);
+        } catch (err) {
+          console.warn('Cast not available:', err);
+          setCast([]);
+        }
 
-        // Fetch similar movies
-        const similarResponse = await fetch(
-          `https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_API_KEY}&language=en-US&page=1`
-        );
-        const similarData = await similarResponse.json();
-        setSimilarMovies(similarData.results?.slice(0, 12) || []);
+        // Fetch similar movies - handle empty response
+        try {
+          const similarResponse = await fetch(
+            `https://api.themoviedb.org/3/movie/${id}/similar?api_key=${TMDB_API_KEY}&language=en-US&page=1`
+          );
+          const similarData = await similarResponse.json();
+          const similarResults = similarData.results || [];
+          
+          // If no similar movies found, try recommendations endpoint
+          if (similarResults.length === 0) {
+            const recommendationsResponse = await fetch(
+              `https://api.themoviedb.org/3/movie/${id}/recommendations?api_key=${TMDB_API_KEY}&language=en-US&page=1`
+            );
+            const recommendationsData = await recommendationsResponse.json();
+            setSimilarMovies(recommendationsData.results?.slice(0, 12) || []);
+          } else {
+            setSimilarMovies(similarResults.slice(0, 12));
+          }
+        } catch (err) {
+          console.warn('Similar movies not available:', err);
+          setSimilarMovies([]);
+        }
 
       } catch (error) {
         console.error('Error fetching movie details:', error);
@@ -739,7 +770,7 @@ const MovieDetails = () => {
         </div>
 
         {/* Keywords */}
-        {keywords.length > 0 && (
+        {keywords.length > 0 ? (
           <>
             <h2 style={{...styles.sectionTitle, marginTop: '3rem'}}>Themes & Keywords</h2>
             <div style={styles.keywordsContainer}>
@@ -766,10 +797,17 @@ const MovieDetails = () => {
               ))}
             </div>
           </>
+        ) : (
+          <div style={{marginTop: '3rem'}}>
+            <h2 style={styles.sectionTitle}>Themes & Keywords</h2>
+            <p style={{color: '#6b7280', fontSize: '1rem', fontStyle: 'italic'}}>
+              No keywords available for this movie.
+            </p>
+          </div>
         )}
 
         {/* Similar Movies */}
-        {similarMovies.length > 0 && (
+        {similarMovies.length > 0 ? (
           <>
             <h2 style={{...styles.sectionTitle, marginTop: '3rem'}}>Similar Movies</h2>
             <div style={styles.similarGrid}>
@@ -821,6 +859,13 @@ const MovieDetails = () => {
               ))}
             </div>
           </>
+        ) : (
+          <div style={{marginTop: '3rem'}}>
+            <h2 style={styles.sectionTitle}>Similar Movies</h2>
+            <p style={{color: '#6b7280', fontSize: '1rem', fontStyle: 'italic'}}>
+              No similar movies found. Try browsing by genre instead!
+            </p>
+          </div>
         )}
 
         {/* Production Countries */}
