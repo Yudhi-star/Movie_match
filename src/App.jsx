@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { Search, Film, Heart, X, AlertCircle } from 'lucide-react';
-import MovieDetails from './MovieDetails';
+import MovieDetails from './moviedetails';
 import { useSearchParams, useLocation } from 'react-router-dom';
 
 const HomePage = () => {
@@ -364,39 +364,86 @@ const HomePage = () => {
 
   const fetchPopularMovies = async () => {
     try {
+      console.log('🎬 Fetching popular movies...');
+      
+      // Add timeout for mobile networks
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`
+        `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`,
+        { signal: controller.signal }
       );
-      if (!response.ok) throw new Error('Failed to fetch popular movies');
+      
+      clearTimeout(timeoutId);
+      
+      console.log('📡 Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('✅ Movies loaded:', data.results?.length);
+      
       setPopularMovies(data.results.slice(0, 12));
       setError(null);
     } catch (error) {
-      console.error('Error fetching popular movies:', error);
-      setError('Failed to load popular movies. Please try again later.');
+      console.error('❌ Error fetching popular movies:', error);
+      
+      if (error.name === 'AbortError') {
+        setError('Request timeout. Please check your internet connection and try again.');
+      } else {
+        setError(`Failed to load movies: ${error.message}. Please refresh the page.`);
+      }
     }
   };
 
   const fetchGenres = async () => {
     try {
+      console.log('🎭 Fetching genres...');
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
       const response = await fetch(
-        `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`
+        `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}&language=en-US`,
+        { signal: controller.signal }
       );
-      if (!response.ok) throw new Error('Failed to fetch genres');
+      
+      clearTimeout(timeoutId);
+      
+      console.log('📡 Genre response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
+      console.log('✅ Genres loaded:', data.genres?.length);
+      
       setGenres(data.genres.slice(0, 12));
       setError(null);
     } catch (error) {
-      console.error('Error fetching genres:', error);
-      setError('Failed to load genres. Please check your API key.');
+      console.error('❌ Error fetching genres:', error);
+      
+      if (error.name === 'AbortError') {
+        setError('Request timeout. Please check your internet connection.');
+      } else {
+        setError(`Failed to load genres: ${error.message}`);
+      }
     }
   };
 
   useEffect(() => {
+    console.log('🔑 API Key Check:', TMDB_API_KEY ? 'Present' : 'Missing');
+    console.log('📱 User Agent:', navigator.userAgent);
+    
     if (TMDB_API_KEY && TMDB_API_KEY !== 'YOUR_API_KEY_HERE') {
       fetchPopularMovies();
       fetchGenres();
     } else {
+      console.error('❌ API Key not configured properly');
       setError('TMDB API key is not configured. Please add your API key to the .env file.');
     }
   }, []);
@@ -626,12 +673,31 @@ const HomePage = () => {
     <div style={styles.app}>
       <header style={styles.header}>
         <div style={styles.headerContent}>
-          <Link to="/" style={styles.logo} aria-label="MovieMatch Home">
+          <Link 
+            to="/" 
+            style={styles.logo} 
+            aria-label="MovieMatch Home"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setSearchResults([]);
+              setSearchQuery('');
+            }}
+          >
             <Film size={32} color="#3b82f6" />
             <h1>MovieMatch</h1>
           </Link>
           <nav style={styles.nav} role="navigation">
-            <Link to="/" style={styles.navLink}>Home</Link>
+            <Link 
+              to="/" 
+              style={styles.navLink}
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setSearchResults([]);
+                setSearchQuery('');
+              }}
+            >
+              Home
+            </Link>
             <a href="#genres" style={styles.navLink}>Genres</a>
             <a href="#about" style={styles.navLink}>About</a>
             <a href="#contact" style={styles.navLink}>Contact</a>
